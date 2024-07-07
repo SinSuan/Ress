@@ -1,4 +1,16 @@
-def get_input_for_reader(chunk, os_prompt, input_question):
+def prompt_4_summarize_chunk(chunk, os_prompt, input_question):
+    """ extract the key information from the chunk
+    Var
+        chunk: str
+            The chunk that needs to be summarized
+            
+        os_prompt: str
+            The prompt to enhance the model's performance
+            
+        input_question: str
+            The question that needs to be answered
+    """
+    
     input_for_reader = \
 f"""Article excerpt:
 {chunk}
@@ -12,7 +24,16 @@ Question:
 {input_question}"""
     return input_for_reader
 
-def get_input_to_llm(new_content, input_question):
+def prompt_4_exam_multichoice(new_content, input_question):
+    """
+    Var
+        new_content: str
+            summarized chuncks of the corresponding content
+            
+        input_question: str
+            The question that needs to be answered
+    """
+
     input_to_llm = \
 f"""There will be an article question and four options. 
 Please choose the option that answers the question based on the article.
@@ -27,7 +48,13 @@ Your answer must be the number of one of the options,meaning it should be either
 The format for the answer should be as follows: Answer__optionX."""
     return input_to_llm
 
-def get_input_to_temperature_llm(example):
+def prompt_4_create_new_prompt(example):
+    """
+    Var
+        example: str
+            form: "[Old prompt]:"{p['prompt']}"\n[Scores]:{p['score']}"
+    """
+    
     input_to_temperature_llm = \
 f"""You are an expert at crafting prompts.
 Based on the example task given below for an LLM, fill in the most suitable prompt in the place marked [new_prompt].
@@ -55,3 +82,26 @@ Please help me think of a unique new_prompt where higher scores are better.
 DON'T return the [Scores] or explanation.
 Your new_prompt:__"""
     return input_to_temperature_llm
+
+def get_prompt(type_task, *args):
+    """
+    Var
+        type_task: str
+            The type of task that the prompt is for.
+            0: summarize_chunk
+            1: exam_multichoice
+            2: create_new_prompt
+        
+        *args: tuple
+            The arguments that are needed to generate the prompt.
+    """
+    if type_task==0:
+        full_prompt = prompt_4_summarize_chunk(*args)
+    elif type_task==1:
+        full_prompt = prompt_4_exam_multichoice(*args)
+    elif type_task==2:
+        full_prompt = prompt_4_create_new_prompt(*args)
+    else:
+        raise ValueError(f"Invalid type_task: {type_task}")
+    
+    return full_prompt
