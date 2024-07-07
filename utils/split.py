@@ -1,0 +1,200 @@
+
+import configparser
+from sentence_transformers import util
+
+# argument type
+from typing import List
+from .embedding import Encoder
+
+CONFIG = configparser.ConfigParser()
+CONFIG.read("/user_data/itri/Ress/config.ini")
+DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
+
+# get_ttl_idx_check
+def get_adjacent_similarity(embedding_sentences):
+    """
+    計算句子倆倆相似度
+    """
+    if DEBUGGER=="True":
+        print("enter get_adjacent_similarity")
+
+    dot_result = []
+    for i in range(len(embedding_sentences) - 1):
+        similarity_of_adjacent = util.dot_score(embedding_sentences[i], embedding_sentences[i + 1])
+        similarity_of_adjacent = similarity_of_adjacent.item()  # tensor of torch.float64
+        dot_result.append(similarity_of_adjacent)   # float
+
+    if DEBUGGER=="True":
+        print("exit get_adjacent_similarity")
+    return dot_result
+
+def find_smaller_than_neighbors(arr):
+    if DEBUGGER=="True":
+        print("enter find_smaller_than_neighbors")
+
+    result = []
+    for i in range(1, len(arr) - 1):
+        if arr[i] < min(arr[i - 1], arr[i + 1]):
+            result.append(i)
+
+    if DEBUGGER=="True":
+        print("exit find_smaller_than_neighbors")
+    return result
+
+def get_ttl_idx_check(sentences, model: Encoder=None)->List[int]:
+    if DEBUGGER=="True":
+        print("enter get_ttl_idx_check")
+    
+    if model is None:   # split_with_overlap_english
+        ttl_idx_check = range(len(sentences))
+
+    else:   # Semantic_Sentence_Split
+        embedding_sentences = model.encode(sentences)
+        ttl_similarity = get_adjacent_similarity(embedding_sentences)
+        ttl_idx_check = find_smaller_than_neighbors(ttl_similarity)
+    
+    return ttl_idx_check
+
+# create_ttl_chunk
+def count_words(sentences):
+    """
+    Var
+        sentences: List[str]
+            raw document
+    
+    Return
+        int: the number of words in thees sentences
+    """
+    if DEBUGGER=="True":
+        print("enter count_words")
+
+    count = 0
+    for sentence in sentences:
+        count += len(sentence.split(" "))
+
+    if DEBUGGER=="True":
+        print("exit count_words")
+    return count
+
+def create_single_chunk(sentences, pre_post_idx: tuple, overlap_pre=[], overlap_post=[]):
+    """
+    Var
+        sentences: List[str]
+            split document
+    
+        pre_post_idx: tuple
+            (idx_start, idx_end) of the sentence that need to be chunked
+        
+        overlap_pre: List[str]
+            the sentences that overlap before the chunk
+        
+        overlap_post: List[str]
+            the sentences that overlap after the chunk
+    
+    Return
+        str: a chunk
+    """
+    if DEBUGGER=="True":
+        print("enter create_single_chunk")
+
+    idx_start, idx_end = pre_post_idx
+    sentences_observed = sentences[idx_start:idx_end]
+    sentences_4_chunk = overlap_pre + sentences_observed + overlap_post
+    chunk = ". ".join(sentences_4_chunk)
+
+    if DEBUGGER=="True":
+        print("exit create_single_chunk")
+    return chunk    
+
+def create_ttl_chunk(sentences, ttl_idx_check, chunk_size=3000, overlap=10)->List[str]:
+    """
+    Var
+        sentences: List[str]
+            split document
+            
+        ttl_idx_check: List[int]
+            the index of the sentence that need to be chunked
+
+        chunk_size: int
+            the number of words in each chunk
+        
+        overlap: int
+            the number of sentences that overlap between chunks
+
+    Return
+        List[str]: List of chunks
+    """
+    if DEBUGGER=="True":
+        print("enter Sentence_Split")
+
+    num_idx_check = len(ttl_idx_check)
+    
+    i = 0
+    idx_start = 0
+    idx_end = 0
+    overlap_pre = []    # 前overlap句
+    overlap_post = []   # 後overlap句
+    ttl_chunk = []  # 所有 chunk
+    
+    # first while-loop
+    while((i<num_idx_check) and (idx_end+overlap<len(sentences))):   # 有下一個句子
+        
+        # 找到下一個需要切的句子
+        temp_sentences_observed = sentences[idx_start:idx_end]
+        # second while-loop
+        while((i<num_idx_check) and (count_words(temp_sentences_observed)<chunk_size)):
+            idx_end = ttl_idx_check[i] + 1
+            temp_sentences_observed = sentences[idx_start:idx_end]
+            i += 1
+        i -= 1  # 出 while-loop 的時候 > chunk_size 了，回到上一個 check (ex: pick)
+        idx_end = ttl_idx_check[i] + 1
+        
+        # 組合 chunk
+        overlap_post = sentences[idx_end:idx_end+overlap]
+        chunk = create_single_chunk(sentences, (idx_start, idx_end), overlap_pre, overlap_post)
+        ttl_chunk.append(chunk)
+        
+        # 更新參數
+        i += 1  # 下一次直接看下一個 check，不然會出不去 first while-loop
+        idx_start = idx_end
+        overlap_pre = sentences[idx_start-overlap:idx_start]
+
+    # 補做最後一個 chunk
+    if idx_end+overlap<len(sentences)-1:
+        # 組合 chunk
+        chunk = create_single_chunk(sentences, (idx_start, None), overlap_pre, [])
+        ttl_chunk.append(chunk)
+
+    if DEBUGGER=="True":
+        print("exit Sentence_Split")
+    return ttl_chunk
+
+# get_ttl_chunk
+def get_ttl_chunk(text, chunk_size=3000, overlap=10, model: Encoder=None)->List[str]:
+    """
+    Var
+        text: str
+            raw document
+    
+        chunk_size: int
+            the number of words in each chunk
+        
+        overlap: int
+            the number of sentences that overlap between chunks
+        
+        model: Encoder
+            None: use split_with_overlap_english
+            Encoder: use Semantic_Sentence_Split
+    """
+    if DEBUGGER=="True":
+        print("enter get_ttl_chunk")
+
+    # 將句子以句號分割
+    sentences = text.split(".")
+    # 將句子進行encode
+    ttl_idx_check = get_ttl_idx_check(sentences, model)
+    ttl_chunk = create_ttl_chunk(sentences, ttl_idx_check, chunk_size, overlap)
+
+    if DEBUGGER=="True":
+        print("exit get_ttl_chunk")
+    return ttl_chunk
