@@ -36,7 +36,7 @@ def api_bgem3(text):
         print("exit get_embedding")
     return embedding
 
-class bgem3:
+class Bgem3:
     def __init__(self) -> None:
         self.model = api_bgem3
 
@@ -52,7 +52,7 @@ class bgem3:
         embedding_sentences = np.array(embedding_sentences)
         return embedding_sentences
 
-class other_emdedding:
+class Other_Emdedding:
     def __init__(self, type_model:str) -> None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = SentenceTransformer(type_model).to(device)
@@ -63,7 +63,7 @@ class other_emdedding:
         embedding_sentences = self.model.encode(sentences)
         return embedding_sentences
 
-class encoder:
+class Encoder:
     def __init__(self, type_model:str) -> None:
         """
         Var
@@ -73,9 +73,9 @@ class encoder:
         """
 
         if type_model=="bgem3":
-            self.model = bgem3()
+            self.model = Bgem3()
         else:
-            self.model = other_emdedding(type_model)
+            self.model = Other_Emdedding(type_model)
 
     def encode(self, sentences: List[str])->List:
         embedding_sentences = self.model.encode(sentences)
