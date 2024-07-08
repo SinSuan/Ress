@@ -61,14 +61,14 @@ def get_ttl_idx_check(sentences, embedding_model: Encoder=None)->List[int]:
     return ttl_idx_check
 
 # create_ttl_chunk
-def find_low_pick_4_next_chunk(latter_part_sentences, latter_part_ttl_idx_check, chunk_size):
+def find_low_pick_4_next_chunk(rest_sentences, rest_ttl_idx_check, chunk_size):
     """
     Var
-        latter_part_sentences: List[str]
+        rest_sentences: List[str]
             split document
             ( part_sentences[idx_start:] )
             
-        latter_part_ttl_idx_check: List[int]
+        rest_ttl_idx_check: List[int]
             the index of the sentence that need to be chunked
             ( ttl_idx_check[i:] )
 
@@ -78,17 +78,17 @@ def find_low_pick_4_next_chunk(latter_part_sentences, latter_part_ttl_idx_check,
     if DEBUGGER=="True":
         print("enter find_low_pick_4_next_chunk")
 
-    num_latter_part_idx_check = len(latter_part_ttl_idx_check)
+    num_rest_idx_check = len(rest_ttl_idx_check)
 
     # 找這個 chunk 的 idx_end
     i_diff = 0
     idx_end = 0
-    temp_sentences_observed = latter_part_sentences[:0]
+    temp_sentences_observed = rest_sentences[:0]
     # second while-loop
-    while((i_diff<num_latter_part_idx_check) and (count_words(temp_sentences_observed)<chunk_size)):
+    while((i_diff<num_rest_idx_check) and (count_words(temp_sentences_observed)<chunk_size)):
         # print(0)
-        idx_end = latter_part_ttl_idx_check[i_diff] + 1
-        temp_sentences_observed = latter_part_sentences[:idx_end]
+        idx_end = rest_ttl_idx_check[i_diff] + 1
+        temp_sentences_observed = rest_sentences[:idx_end]
         i_diff += 1
         # print(1)
 
@@ -165,9 +165,9 @@ def create_ttl_chunk(sentences, ttl_idx_check, chunk_size=3000, overlap=10)->Lis
     while((i<num_idx_check) and (idx_end+overlap<len(sentences))):   # 有下一個句子
 
         # 找這個 chunk 的 idx_end
-        latter_part_sentences = sentences[idx_start:]
-        latter_part_ttl_idx_check = ttl_idx_check[i:]
-        i += find_low_pick_4_next_chunk(latter_part_sentences, latter_part_ttl_idx_check, chunk_size)
+        rest_sentences = sentences[idx_start:]
+        rest_ttl_idx_check = ttl_idx_check[i:]
+        i += find_low_pick_4_next_chunk(rest_sentences, rest_ttl_idx_check, chunk_size)
 
         # 出 while-loop 的時候 > chunk_size 了，回到上一個 check (ex: pick)
         idx_end = ttl_idx_check[i-1] + 1
