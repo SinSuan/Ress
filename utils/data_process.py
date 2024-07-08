@@ -1,8 +1,14 @@
+"""
+這個檔案目前沒有用到，但 data preprocess 時會用到 data_format
+"""
+
 import configparser
 import json
+import os
 
 CONFIG = configparser.ConfigParser()
-CONFIG.read("/user_data/itri/Ress/config.ini")
+PATH_CONFIG = os.getenv('path_2_config')
+CONFIG.read(PATH_CONFIG)
 DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
 
 # Read data from path

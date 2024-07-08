@@ -1,5 +1,10 @@
+"""
+unify the form to call embedding model
+"""
+
 import configparser
 import json
+import os
 from typing import List
 
 import requests
@@ -8,9 +13,11 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 
 CONFIG = configparser.ConfigParser()
-CONFIG.read("/user_data/itri/Ress/config.ini")
-URL = CONFIG["embedding"]["embedding"]
+PATH_CONFIG = os.getenv('path_2_config')
+CONFIG.read(PATH_CONFIG)
 DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
+
+URL = CONFIG["embedding"]["embedding"]
 
 def api_bgem3(text):
     """ call bge-m3 from lab
@@ -37,33 +44,38 @@ def api_bgem3(text):
     return embedding
 
 class Bgem3:
+    """ bge-m3 from lab
+    """
     def __init__(self) -> None:
         self.model = api_bgem3
 
-    def encode(self, sentences: List[str])->List:
-        embedding_sentences = []
-        # for sentence in sentences:
-        for sentence in sentences:
+    def encode(self, ttl_sentence: List[str])->List:
+        ttl_embedding = []
+        for sentence in ttl_sentence:
             # bgem3 無法處理空字串
             if sentence=="":
                 sentence = " "
-            embedding_sentence = self.model(sentence)
-            embedding_sentences.append(embedding_sentence)
-        embedding_sentences = np.array(embedding_sentences)
-        return embedding_sentences
+            embedding = self.model(sentence)
+            ttl_embedding.append(embedding)
+        ttl_embedding = np.array(ttl_embedding)
+        return ttl_embedding
 
-class Other_Emdedding:
+class OtherEmdedding:
+    """ other embedding model downloaded from SentenceTransformer
+    """
     def __init__(self, type_model:str) -> None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = SentenceTransformer(type_model).to(device)
 
-    def encode(self, sentences):
+    def encode(self, ttl_sentence):
         """ 很多餘，但不打這個的話 encoder 會跑不動
         """
-        embedding_sentences = self.model.encode(sentences)
-        return embedding_sentences
+        ttl_embedding = self.model.encode(ttl_sentence)
+        return ttl_embedding
 
 class Encoder:
+    """ unify the form to call embedding model
+    """
     def __init__(self, type_model:str) -> None:
         """
         Var
@@ -75,8 +87,10 @@ class Encoder:
         if type_model=="bgem3":
             self.model = Bgem3()
         else:
-            self.model = Other_Emdedding(type_model)
+            self.model = OtherEmdedding(type_model)
 
-    def encode(self, sentences: List[str])->List:
-        embedding_sentences = self.model.encode(sentences)
-        return embedding_sentences
+    def encode(self, ttl_sentence: List[str])->List:
+        """ encode a list of strings at once
+        """
+        ttl_embedding = self.model.encode(ttl_sentence)
+        return ttl_embedding

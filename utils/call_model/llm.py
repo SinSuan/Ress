@@ -1,19 +1,21 @@
 import configparser
 import json
+import os
 import requests
 
 CONFIG = configparser.ConfigParser()
-CONFIG.read("/user_data/itri/Ress/config.ini")
+PATH_CONFIG = os.getenv('path_2_config')
+CONFIG.read(PATH_CONFIG)
 DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
+
 URL = CONFIG["breeze"]["lab"]
 SUGGEST_SYSTEM_PROMPT = CONFIG["breeze"]["SUGGEST_SYSTEM_PROMPT"]
 
-def api_breeze(input_content, max_new_tokens=4096, temperature=None):
-# def api_breeze(input_content, max_new_tokens=4096, temperature=None):
+def api_breeze(user_prompt, max_new_tokens=4096, temperature=None):
     if DEBUGGER=="True":
         print("enter api_breeze")
 
-    payload_input=f"<s> {SUGGEST_SYSTEM_PROMPT} [INST] {input_content} [/INST]"
+    payload_input=f"<s> {SUGGEST_SYSTEM_PROMPT} [INST] {user_prompt} [/INST]"
     parameter = {
         "do_sample": False,
         "max_new_tokens":max_new_tokens,

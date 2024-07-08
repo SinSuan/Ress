@@ -1,3 +1,8 @@
+"""
+prompt 太常了，另外寫成 function
+不存成 json 是因為仍要便於閱讀與編輯
+"""
+
 def get_prompt_4_summarize_chunk(chunk, os_prompt, input_question):
     """ extract the key information from the chunk
     Var
@@ -10,7 +15,7 @@ def get_prompt_4_summarize_chunk(chunk, os_prompt, input_question):
         input_question: str
             The question that needs to be answered
     """
-    
+
     prompt_4_summarize_chunk = \
 f"""Article excerpt:
 {chunk}
@@ -96,12 +101,12 @@ def get_prompt(type_task, *args):
             The arguments that are needed to generate the prompt.
     """
     if type_task in [0, "sum"]:
-        full_prompt = get_prompt_4_summarize_chunk(*args)
+        user_prompt = get_prompt_4_summarize_chunk(*args)
     elif type_task in [1, "exam"]:
-        full_prompt = get_prompt_4_exam_multichoice(*args)
+        user_prompt = get_prompt_4_exam_multichoice(*args)
     elif type_task in [2, "new"]:
-        full_prompt = get_prompt_4_create_new_os_prompt(*args)
+        user_prompt = get_prompt_4_create_new_os_prompt(*args)
     else:
         raise ValueError(f"Invalid type_task: {type_task}")
 
-    return full_prompt
+    return user_prompt

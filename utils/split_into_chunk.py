@@ -1,26 +1,25 @@
 import configparser
-from sentence_transformers import util
-
-# argument type
+import os
 from typing import List
-
+from sentence_transformers import util
 from .tools import count_words
 from .call_model.embedding import Encoder
 
 CONFIG = configparser.ConfigParser()
-CONFIG.read("/user_data/itri/Ress/config.ini")
+PATH_CONFIG = os.getenv('path_2_config')
+CONFIG.read(PATH_CONFIG)
 DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
 
 # get_ttl_idx_check
-def get_adjacent_similarity(embedding_sentences):
+def get_adjacent_similarity(ttl_embedding):
     """ 以內積計算句子倆倆相似度
     """
     if DEBUGGER=="True":
         print("enter get_adjacent_similarity")
 
     ttl_similarity = []
-    for i in range(len(embedding_sentences) - 1):
-        similarity_of_adjacent = util.dot_score(embedding_sentences[i], embedding_sentences[i + 1])
+    for i in range(len(ttl_embedding) - 1):
+        similarity_of_adjacent = util.dot_score(ttl_embedding[i], ttl_embedding[i + 1])
         similarity_of_adjacent = similarity_of_adjacent.item()  # tensor of torch.float64
         ttl_similarity.append(similarity_of_adjacent)   # float
 
@@ -29,8 +28,8 @@ def get_adjacent_similarity(embedding_sentences):
     return ttl_similarity
 
 def find_idx_low_pick(arr):
-    """ low pick indicates that
-    the similarity between two adjacent sentences is lower than that between the other neighbors
+    """ low pick indicates that:
+        the similarity between two adjacent sentences is lower than that between the other neighbors
     """
     if DEBUGGER=="True":
         print("enter find_idx_low_pick")
@@ -44,16 +43,16 @@ def find_idx_low_pick(arr):
         print("exit find_idx_low_pick")
     return ttl_idx_low_pick
 
-def get_ttl_idx_check(sentences, embedding_model: Encoder=None)->List[int]:
+def get_ttl_idx_check(ttl_sentence, embedding_model: Encoder=None)->List[int]:
     if DEBUGGER=="True":
         print("enter get_ttl_idx_check")
 
     if embedding_model is None:   # split_with_overlap_english
-        ttl_idx_check = range(len(sentences))
+        ttl_idx_check = range(len(ttl_sentence))
 
     else:   # Semantic_Sentence_Split
-        embedding_sentences = embedding_model.encode(sentences)
-        ttl_similarity = get_adjacent_similarity(embedding_sentences)
+        ttl_embedding = embedding_model.encode(ttl_sentence)
+        ttl_similarity = get_adjacent_similarity(ttl_embedding)
         ttl_idx_check = find_idx_low_pick(ttl_similarity)
 
     if DEBUGGER=="True":
@@ -61,34 +60,34 @@ def get_ttl_idx_check(sentences, embedding_model: Encoder=None)->List[int]:
     return ttl_idx_check
 
 # create_ttl_chunk
-def find_low_pick_4_next_chunk(rest_sentences, rest_ttl_idx_check, chunk_size):
+def find_low_pick_4_next_chunk(rest_sentence, rest_idx_check, size_chunk):
     """
     Var
-        rest_sentences: List[str]
+        rest_sentence: List[str]
             split document
             ( part_sentences[idx_start:] )
             
-        rest_ttl_idx_check: List[int]
+        rest_idx_check: List[int]
             the index of the sentence that need to be chunked
             ( ttl_idx_check[i:] )
 
-        chunk_size: int
+        size_chunk: int
             the number of words in each chunk
     """
     if DEBUGGER=="True":
         print("enter find_low_pick_4_next_chunk")
 
-    num_rest_idx_check = len(rest_ttl_idx_check)
+    num_rest_idx_check = len(rest_idx_check)
 
     # 找這個 chunk 的 idx_end
     i_diff = 0
     idx_end = 0
-    temp_sentences_observed = rest_sentences[:0]
+    temp_sentence_sublist = rest_sentence[:0]
     # second while-loop
-    while((i_diff<num_rest_idx_check) and (count_words(temp_sentences_observed)<chunk_size)):
+    while((i_diff<num_rest_idx_check) and (count_words(temp_sentence_sublist)<size_chunk)):
         # print(0)
-        idx_end = rest_ttl_idx_check[i_diff] + 1
-        temp_sentences_observed = rest_sentences[:idx_end]
+        idx_end = rest_idx_check[i_diff] + 1
+        temp_sentence_sublist = rest_sentence[:idx_end]
         i_diff += 1
         # print(1)
 
@@ -97,7 +96,7 @@ def find_low_pick_4_next_chunk(rest_sentences, rest_ttl_idx_check, chunk_size):
     return i_diff
 
 def create_single_chunk(
-        sentences,
+        ttl_sentence,
         pre_post_idx: tuple,
         overlap_pre: List[str]=[],
         overlap_post: List[str]=[]
@@ -123,15 +122,15 @@ def create_single_chunk(
         print("enter create_single_chunk")
 
     idx_start, idx_end = pre_post_idx
-    sentences_observed = sentences[idx_start:idx_end]
-    sentences_4_chunk = overlap_pre + sentences_observed + overlap_post
+    sentence_sublist = ttl_sentence[idx_start:idx_end]
+    sentences_4_chunk = overlap_pre + sentence_sublist + overlap_post
     chunk = ". ".join(sentences_4_chunk)
 
     if DEBUGGER=="True":
         print("exit create_single_chunk")
-    return chunk    
+    return chunk
 
-def create_ttl_chunk(sentences, ttl_idx_check, chunk_size=3000, overlap=10)->List[str]:
+def create_ttl_chunk(ttl_sentence, ttl_idx_check, size_chunk=3000, num_overlap=10)->List[str]:
     """
     Var
         sentences: List[str]
@@ -140,10 +139,10 @@ def create_ttl_chunk(sentences, ttl_idx_check, chunk_size=3000, overlap=10)->Lis
         ttl_idx_check: List[int]
             the index of the sentence that need to be chunked
 
-        chunk_size: int
+        size_chunk: int
             the number of words in each chunk
         
-        overlap: int
+        num_overlap: int
             the number of sentences that overlap between chunks
 
     Return
@@ -162,29 +161,29 @@ def create_ttl_chunk(sentences, ttl_idx_check, chunk_size=3000, overlap=10)->Lis
     ttl_chunk = []  # 所有 chunk
 
     # first while-loop
-    while((i<num_idx_check) and (idx_end+overlap<len(sentences))):   # 有下一個句子
+    while((i<num_idx_check) and (idx_end+num_overlap<len(ttl_sentence))):   # 有下一個句子
 
         # 找這個 chunk 的 idx_end
-        rest_sentences = sentences[idx_start:]
+        rest_sentences = ttl_sentence[idx_start:]
         rest_ttl_idx_check = ttl_idx_check[i:]
-        i += find_low_pick_4_next_chunk(rest_sentences, rest_ttl_idx_check, chunk_size)
+        i += find_low_pick_4_next_chunk(rest_sentences, rest_ttl_idx_check, size_chunk)
 
-        # 出 while-loop 的時候 > chunk_size 了，回到上一個 check (ex: pick)
+        # 出 while-loop 的時候 > size_chunk 了，回到上一個 check (ex: pick)
         idx_end = ttl_idx_check[i-1] + 1
 
         # 組合 chunk
-        overlap_post = sentences[idx_end:idx_end+overlap]
-        chunk = create_single_chunk(sentences, (idx_start, idx_end), overlap_pre, overlap_post)
+        overlap_post = ttl_sentence[idx_end:idx_end+num_overlap]
+        chunk = create_single_chunk(ttl_sentence, (idx_start, idx_end), overlap_pre, overlap_post)
         ttl_chunk.append(chunk)
 
         # 更新參數
         idx_start = idx_end
-        overlap_pre = sentences[idx_start-overlap:idx_start]
+        overlap_pre = ttl_sentence[idx_start-num_overlap:idx_start]
 
     # 補做最後一個 chunk
-    if idx_end+overlap<len(sentences)-1:
+    if idx_end+num_overlap<len(ttl_sentence)-1:
         # 組合 chunk
-        chunk = create_single_chunk(sentences, (idx_start, None), overlap_pre, [])
+        chunk = create_single_chunk(ttl_sentence, (idx_start, None), overlap_pre, [])
         ttl_chunk.append(chunk)
 
     if DEBUGGER=="True":
@@ -192,16 +191,16 @@ def create_ttl_chunk(sentences, ttl_idx_check, chunk_size=3000, overlap=10)->Lis
     return ttl_chunk
 
 # get_ttl_chunk
-def get_ttl_chunk(text, chunk_size=3000, overlap=10, embedding_model: Encoder=None)->List[str]:
+def get_ttl_chunk(text, size_chunk=3000, num_overlap=10, embedding_model: Encoder=None)->List[str]:
     """
     Var
         text: str
             raw document
     
-        chunk_size: int
+        size_chunk: int
             the number of words in each chunk
         
-        overlap: int
+        num_overlap: int
             the number of sentences that overlap between chunks
         
         model: Encoder
@@ -212,10 +211,10 @@ def get_ttl_chunk(text, chunk_size=3000, overlap=10, embedding_model: Encoder=No
         print("enter get_ttl_chunk")
 
     # 將句子以句號分割
-    sentences = text.split(".")
+    ttl_sentence = text.split(".")
     # 將句子進行encode
-    ttl_idx_check = get_ttl_idx_check(sentences, embedding_model)
-    ttl_chunk = create_ttl_chunk(sentences, ttl_idx_check, chunk_size, overlap)
+    ttl_idx_check = get_ttl_idx_check(ttl_sentence, embedding_model)
+    ttl_chunk = create_ttl_chunk(ttl_sentence, ttl_idx_check, size_chunk, num_overlap)
 
     if DEBUGGER=="True":
         print("exit get_ttl_chunk")
