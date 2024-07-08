@@ -5,7 +5,7 @@ from sentence_transformers import util
 from typing import List
 
 from .tools import count_words
-from .embedding import Encoder
+from .call_model.embedding import Encoder
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read("/user_data/itri/Ress/config.ini")
@@ -13,46 +13,48 @@ DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
 
 # get_ttl_idx_check
 def get_adjacent_similarity(embedding_sentences):
-    """
-    計算句子倆倆相似度
+    """ 以內積計算句子倆倆相似度
     """
     if DEBUGGER=="True":
         print("enter get_adjacent_similarity")
 
-    dot_result = []
+    ttl_similarity = []
     for i in range(len(embedding_sentences) - 1):
         similarity_of_adjacent = util.dot_score(embedding_sentences[i], embedding_sentences[i + 1])
         similarity_of_adjacent = similarity_of_adjacent.item()  # tensor of torch.float64
-        dot_result.append(similarity_of_adjacent)   # float
+        ttl_similarity.append(similarity_of_adjacent)   # float
 
     if DEBUGGER=="True":
         print("exit get_adjacent_similarity")
-    return dot_result
+    return ttl_similarity
 
-def find_smaller_than_neighbors(arr):
+def find_idx_low_pick(arr):
+    """ low pick indicates that
+    the similarity between two adjacent sentences is lower than that between the other neighbors
+    """
     if DEBUGGER=="True":
-        print("enter find_smaller_than_neighbors")
+        print("enter find_idx_low_pick")
 
-    result = []
-    for i in range(1, len(arr) - 1):
-        if arr[i] < min(arr[i - 1], arr[i + 1]):
-            result.append(i)
+    ttl_idx_low_pick = []
+    for idx in range(1, len(arr) - 1):
+        if arr[idx] < min(arr[idx - 1], arr[idx + 1]):
+            ttl_idx_low_pick.append(idx)
 
     if DEBUGGER=="True":
-        print("exit find_smaller_than_neighbors")
-    return result
+        print("exit find_idx_low_pick")
+    return ttl_idx_low_pick
 
-def get_ttl_idx_check(sentences, model: Encoder=None)->List[int]:
+def get_ttl_idx_check(sentences, embedding_model: Encoder=None)->List[int]:
     if DEBUGGER=="True":
         print("enter get_ttl_idx_check")
 
-    if model is None:   # split_with_overlap_english
+    if embedding_model is None:   # split_with_overlap_english
         ttl_idx_check = range(len(sentences))
 
     else:   # Semantic_Sentence_Split
-        embedding_sentences = model.encode(sentences)
+        embedding_sentences = embedding_model.encode(sentences)
         ttl_similarity = get_adjacent_similarity(embedding_sentences)
-        ttl_idx_check = find_smaller_than_neighbors(ttl_similarity)
+        ttl_idx_check = find_idx_low_pick(ttl_similarity)
 
     if DEBUGGER=="True":
         print("exit get_ttl_idx_check")
@@ -190,7 +192,7 @@ def create_ttl_chunk(sentences, ttl_idx_check, chunk_size=3000, overlap=10)->Lis
     return ttl_chunk
 
 # get_ttl_chunk
-def get_ttl_chunk(text, chunk_size=3000, overlap=10, model: Encoder=None)->List[str]:
+def get_ttl_chunk(text, chunk_size=3000, overlap=10, embedding_model: Encoder=None)->List[str]:
     """
     Var
         text: str
@@ -212,7 +214,7 @@ def get_ttl_chunk(text, chunk_size=3000, overlap=10, model: Encoder=None)->List[
     # 將句子以句號分割
     sentences = text.split(".")
     # 將句子進行encode
-    ttl_idx_check = get_ttl_idx_check(sentences, model)
+    ttl_idx_check = get_ttl_idx_check(sentences, embedding_model)
     ttl_chunk = create_ttl_chunk(sentences, ttl_idx_check, chunk_size, overlap)
 
     if DEBUGGER=="True":

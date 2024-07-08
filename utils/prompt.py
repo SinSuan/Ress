@@ -103,5 +103,5 @@ def get_prompt(type_task, *args):
         full_prompt = get_prompt_4_create_new_os_prompt(*args)
     else:
         raise ValueError(f"Invalid type_task: {type_task}")
-    
+
     return full_prompt
