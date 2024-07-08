@@ -2,7 +2,6 @@ import configparser
 
 from .prompt import get_prompt
 from .split import get_ttl_chunk
-from .embedding import Encoder
 CONFIG = configparser.ConfigParser()
 CONFIG.read("/user_data/itri/Ress/config.ini")
 DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
@@ -11,25 +10,28 @@ model_name="Breeze" #Breeze Taide ChatGPT Llama3 Mistral
 from utils.call_model import get_api
 get_llm_reply=get_api(model_name)
 
-def os_ap_sss_answer(os_prompt,data,truncate_size=3000,overlap=10, embedding_model: Encoder = None):
+def os_ap_sss_answer(os_prompt,data,chunk_size=3000,overlap=10, embedding_model=None):
     """
-    url_num 多個api要用哪張顯卡 multithread 用的
-    input_content 輸入文章
-    input_question 輸入問題
-    truncate_size 最常吃的input
-    overlap 切完文章後要 overlap 多少句
+    Var
+        chunk_size: int
+            the number of words in each chunk
+            
+        overlap: int
+            the number of senetences that overlap between two chunks
+            
+        embedding_model: Encoder in utils.embedding
     """
     if DEBUGGER=="True":
         print("enter os_ap_sss_answer")
 
-    input_content=data['content']
-    input_question=data['question']
-    
+    input_content=data['content']   # 參考文章
+    input_question=data['question'] # 問題(多選題)
+
     # 切分摘要完要輸入給llm的內容
     new_content=input_content
-    while len(new_content.split(" "))>truncate_size:
-        
-        content_chuncks=get_ttl_chunk(new_content,truncate_size,overlap,embedding_model)
+    while len(new_content.split(" "))>chunk_size:
+
+        content_chuncks=get_ttl_chunk(new_content,chunk_size,overlap,embedding_model)
         # 這一輪的新內容
         new_content=""
         for chunk in content_chuncks:

@@ -9,8 +9,10 @@ DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
 def get_data(path):
     if DEBUGGER=="True":
         print("enter get_data")
+
     with open(path,"r",encoding="utf-8")as file:
         data=json.load(file)
+
     if DEBUGGER=="True":
         print("exit get_data")
     return data

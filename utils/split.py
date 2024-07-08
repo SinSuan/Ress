@@ -1,9 +1,10 @@
-
 import configparser
 from sentence_transformers import util
 
 # argument type
 from typing import List
+
+from .tools import count_words
 from .embedding import Encoder
 
 CONFIG = configparser.ConfigParser()
@@ -44,7 +45,7 @@ def find_smaller_than_neighbors(arr):
 def get_ttl_idx_check(sentences, model: Encoder=None)->List[int]:
     if DEBUGGER=="True":
         print("enter get_ttl_idx_check")
-    
+
     if model is None:   # split_with_overlap_english
         ttl_idx_check = range(len(sentences))
 
@@ -52,31 +53,53 @@ def get_ttl_idx_check(sentences, model: Encoder=None)->List[int]:
         embedding_sentences = model.encode(sentences)
         ttl_similarity = get_adjacent_similarity(embedding_sentences)
         ttl_idx_check = find_smaller_than_neighbors(ttl_similarity)
-    
+
+    if DEBUGGER=="True":
+        print("exit get_ttl_idx_check")
     return ttl_idx_check
 
 # create_ttl_chunk
-def count_words(sentences):
+def find_low_pick_4_next_chunk(latter_part_sentences, latter_part_ttl_idx_check, chunk_size):
     """
     Var
-        sentences: List[str]
-            raw document
-    
-    Return
-        int: the number of words in thees sentences
+        latter_part_sentences: List[str]
+            split document
+            ( part_sentences[idx_start:] )
+            
+        latter_part_ttl_idx_check: List[int]
+            the index of the sentence that need to be chunked
+            ( ttl_idx_check[i:] )
+
+        chunk_size: int
+            the number of words in each chunk
     """
     if DEBUGGER=="True":
-        print("enter count_words")
+        print("enter find_low_pick_4_next_chunk")
 
-    count = 0
-    for sentence in sentences:
-        count += len(sentence.split(" "))
+    num_latter_part_idx_check = len(latter_part_ttl_idx_check)
+
+    # 找這個 chunk 的 idx_end
+    i_diff = 0
+    idx_end = 0
+    temp_sentences_observed = latter_part_sentences[:0]
+    # second while-loop
+    while((i_diff<num_latter_part_idx_check) and (count_words(temp_sentences_observed)<chunk_size)):
+        # print(0)
+        idx_end = latter_part_ttl_idx_check[i_diff] + 1
+        temp_sentences_observed = latter_part_sentences[:idx_end]
+        i_diff += 1
+        # print(1)
 
     if DEBUGGER=="True":
-        print("exit count_words")
-    return count
+        print("exit find_low_pick_4_next_chunk")
+    return i_diff
 
-def create_single_chunk(sentences, pre_post_idx: tuple, overlap_pre=[], overlap_post=[]):
+def create_single_chunk(
+        sentences,
+        pre_post_idx: tuple,
+        overlap_pre: List[str]=[],
+        overlap_post: List[str]=[]
+):
     """
     Var
         sentences: List[str]
@@ -128,34 +151,31 @@ def create_ttl_chunk(sentences, ttl_idx_check, chunk_size=3000, overlap=10)->Lis
         print("enter Sentence_Split")
 
     num_idx_check = len(ttl_idx_check)
-    
+
     i = 0
     idx_start = 0
     idx_end = 0
     overlap_pre = []    # 前overlap句
     overlap_post = []   # 後overlap句
     ttl_chunk = []  # 所有 chunk
-    
+
     # first while-loop
     while((i<num_idx_check) and (idx_end+overlap<len(sentences))):   # 有下一個句子
-        
-        # 找到下一個需要切的句子
-        temp_sentences_observed = sentences[idx_start:idx_end]
-        # second while-loop
-        while((i<num_idx_check) and (count_words(temp_sentences_observed)<chunk_size)):
-            idx_end = ttl_idx_check[i] + 1
-            temp_sentences_observed = sentences[idx_start:idx_end]
-            i += 1
-        i -= 1  # 出 while-loop 的時候 > chunk_size 了，回到上一個 check (ex: pick)
-        idx_end = ttl_idx_check[i] + 1
-        
+
+        # 找這個 chunk 的 idx_end
+        latter_part_sentences = sentences[idx_start:]
+        latter_part_ttl_idx_check = ttl_idx_check[i:]
+        i += find_low_pick_4_next_chunk(latter_part_sentences, latter_part_ttl_idx_check, chunk_size)
+
+        # 出 while-loop 的時候 > chunk_size 了，回到上一個 check (ex: pick)
+        idx_end = ttl_idx_check[i-1] + 1
+
         # 組合 chunk
         overlap_post = sentences[idx_end:idx_end+overlap]
         chunk = create_single_chunk(sentences, (idx_start, idx_end), overlap_pre, overlap_post)
         ttl_chunk.append(chunk)
-        
+
         # 更新參數
-        i += 1  # 下一次直接看下一個 check，不然會出不去 first while-loop
         idx_start = idx_end
         overlap_pre = sentences[idx_start-overlap:idx_start]
 
