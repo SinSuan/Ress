@@ -67,7 +67,9 @@ def main():
     path_data = CONFIG["datapath"]["Final_Quality"]
     path_prompt = CONFIG["datapath"]["init_os_prompt"]
     type_llm = "Breeze"
-    type_embedding = "multi-qa-mpnet-base-dot-v1"
+    # type_embedding = "multi-qa-mpnet-base-dot-v1"
+    type_embedding = "bgem3"
+    # type_embedding = None
     ttl_model, ttl_data, ttl_pair_os_prompt_scores = init_setting(type_llm, type_embedding, path_data, path_prompt)
     get_llm_reply, _ = ttl_model
 

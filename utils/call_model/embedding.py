@@ -17,7 +17,7 @@ PATH_CONFIG = os.getenv('path_2_config')
 CONFIG.read(PATH_CONFIG)
 DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
 
-URL = CONFIG["embedding"]["embedding"]
+URL_BGEM3 = CONFIG["embedding"]["bgem3"]
 
 def api_bgem3(text):
     """ call bge-m3 from lab
@@ -35,7 +35,7 @@ def api_bgem3(text):
         'Content-Type': 'application/json'
     }
 
-    response = requests.request("POST", URL, headers=headers, data=payload, timeout=120)
+    response = requests.request("POST", URL_BGEM3, headers=headers, data=payload, timeout=120)
     response = json.loads(response.text)
     embedding = response['data'][0]['embedding']
 
@@ -68,7 +68,7 @@ class OtherEmdedding:
         self.model = SentenceTransformer(type_model).to(device)
 
     def encode(self, ttl_sentence):
-        """ 很多餘，但不打這個的話 encoder 會跑不動
+        """ 很多餘，但不打這個的話 Encoder 會跑不動
         """
         ttl_embedding = self.model.encode(ttl_sentence)
         return ttl_embedding
