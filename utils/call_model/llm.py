@@ -17,11 +17,10 @@ def api_breeze(user_prompt, max_new_tokens=4096, temperature=None):
 
     payload_input=f"<s> {SUGGEST_SYSTEM_PROMPT} [INST] {user_prompt} [/INST]"
     parameter = {
-        "do_sample": False,
+        "do_sample": temperature is not None,
         "max_new_tokens":max_new_tokens,
+        "temperature": temperature
     }
-    if temperature is not None:
-        parameter["temperature"] = temperature
 
     payload = json.dumps({
         "inputs": payload_input,
