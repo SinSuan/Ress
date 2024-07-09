@@ -27,21 +27,21 @@ def get_adjacent_similarity(ttl_embedding):
         print("exit get_adjacent_similarity")
     return ttl_similarity
 
-def find_idx_low_pick(arr):
-    """ low pick indicates that:
+def find_idx_low_peak(arr):
+    """ low peak indicates that:
         the similarity between two adjacent sentences is lower than that between the other neighbors
     """
     if DEBUGGER=="True":
-        print("enter find_idx_low_pick")
+        print("enter find_idx_low_peak")
 
-    ttl_idx_low_pick = []
+    ttl_idx_low_peak = []
     for idx in range(1, len(arr) - 1):
         if arr[idx] < min(arr[idx - 1], arr[idx + 1]):
-            ttl_idx_low_pick.append(idx)
+            ttl_idx_low_peak.append(idx)
 
     if DEBUGGER=="True":
-        print("exit find_idx_low_pick")
-    return ttl_idx_low_pick
+        print("exit find_idx_low_peak")
+    return ttl_idx_low_peak
 
 def get_ttl_idx_check(ttl_sentence, embedding_model: Encoder=None)->List[int]:
     if DEBUGGER=="True":
@@ -53,14 +53,14 @@ def get_ttl_idx_check(ttl_sentence, embedding_model: Encoder=None)->List[int]:
     else:   # Semantic_Sentence_Split
         ttl_embedding = embedding_model.encode(ttl_sentence)
         ttl_similarity = get_adjacent_similarity(ttl_embedding)
-        ttl_idx_check = find_idx_low_pick(ttl_similarity)
+        ttl_idx_check = find_idx_low_peak(ttl_similarity)
 
     if DEBUGGER=="True":
         print("exit get_ttl_idx_check")
     return ttl_idx_check
 
 # create_ttl_chunk
-def find_low_pick_4_next_chunk(rest_sentence, rest_idx_check, size_chunk):
+def find_low_peak_4_next_chunk(rest_sentence, rest_idx_check, size_chunk):
     """
     Var
         rest_sentence: List[str]
@@ -75,7 +75,7 @@ def find_low_pick_4_next_chunk(rest_sentence, rest_idx_check, size_chunk):
             the number of words in each chunk
     """
     if DEBUGGER=="True":
-        print("enter find_low_pick_4_next_chunk")
+        print("enter find_low_peak_4_next_chunk")
 
     num_rest_idx_check = len(rest_idx_check)
 
@@ -92,7 +92,7 @@ def find_low_pick_4_next_chunk(rest_sentence, rest_idx_check, size_chunk):
         # print(1)
 
     if DEBUGGER=="True":
-        print("exit find_low_pick_4_next_chunk")
+        print("exit find_low_peak_4_next_chunk")
     return i_diff
 
 def create_single_chunk(
@@ -166,9 +166,9 @@ def create_ttl_chunk(ttl_sentence, ttl_idx_check, size_chunk=3000, num_overlap=1
         # 找這個 chunk 的 idx_end
         rest_sentences = ttl_sentence[idx_start:]
         rest_ttl_idx_check = ttl_idx_check[i:]
-        i += find_low_pick_4_next_chunk(rest_sentences, rest_ttl_idx_check, size_chunk)
+        i += find_low_peak_4_next_chunk(rest_sentences, rest_ttl_idx_check, size_chunk)
 
-        # 出 while-loop 的時候 > size_chunk 了，回到上一個 check (ex: pick)
+        # 出 while-loop 的時候 > size_chunk 了，回到上一個 check (ex: peak)
         idx_end = ttl_idx_check[i-1] + 1
 
         # 組合 chunk
