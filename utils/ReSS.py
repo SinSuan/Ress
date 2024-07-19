@@ -43,7 +43,7 @@ def ReSS(init_set ,path_stop_file):
 
         # 製作 new_prompt
         prompt_4_create_new_os_prompt = get_prompt(2,  example)
-        new_prompt=get_llm_reply(prompt_4_create_new_os_prompt, 4090, 1)
+        new_prompt=get_llm_reply(prompt_4_create_new_os_prompt, 4096, 1)
 
         # 紀錄
         print("="*50)
