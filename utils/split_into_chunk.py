@@ -1,14 +1,36 @@
 import configparser
 import os
 from typing import List
-from sentence_transformers import util
+# from sentence_transformers import util
 from .tools import count_words
 from .call_model.embedding import Encoder
+import numpy as np
 
 CONFIG = configparser.ConfigParser()
 PATH_CONFIG = os.getenv('path_2_config')
-CONFIG.read(PATH_CONFIG)
+
+ENVIRONMENT = os.getenv('environment')
+if ENVIRONMENT=="windows":
+    CONFIG.read(PATH_CONFIG, encoding='utf-8')
+else:
+    CONFIG.read(PATH_CONFIG)
+    
 DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
+
+def normalized(v):
+    len_squared = 0
+    for vi in v:
+        len_squared += vi**2
+    return np.array(v)/(len_squared**(1/2))
+
+def dot_product(v1,v2):
+    length = len(v1)
+    if len(v2)!= length:
+        raise("wrong pair")
+    else:
+        norm_v1 = normalized(v1)
+        norm_v2 = normalized(v2)
+        return np.sum(norm_v1*norm_v2)
 
 # get_ttl_idx_check
 def get_adjacent_similarity(ttl_embedding):
@@ -19,7 +41,8 @@ def get_adjacent_similarity(ttl_embedding):
 
     ttl_similarity = []
     for i in range(len(ttl_embedding) - 1):
-        similarity_of_adjacent = util.dot_score(ttl_embedding[i], ttl_embedding[i + 1])
+        # similarity_of_adjacent = util.dot_score(ttl_embedding[i], ttl_embedding[i + 1])
+        similarity_of_adjacent = dot_product(ttl_embedding[i], ttl_embedding[i + 1])
         similarity_of_adjacent = similarity_of_adjacent.item()  # tensor of torch.float64
         ttl_similarity.append(similarity_of_adjacent)   # float
 

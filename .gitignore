@@ -1,5 +1,6 @@
 utils/api/
 dataset/
+record/
 config.ini
 .env
 test.*

@@ -9,7 +9,13 @@ from .split_into_chunk import get_ttl_chunk
 
 CONFIG = configparser.ConfigParser()
 PATH_CONFIG = os.getenv('path_2_config')
-CONFIG.read(PATH_CONFIG)
+
+ENVIRONMENT = os.getenv('environment')
+if ENVIRONMENT=="windows":
+    CONFIG.read(PATH_CONFIG, encoding='utf-8')
+else:
+    CONFIG.read(PATH_CONFIG)
+    
 DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
 
 

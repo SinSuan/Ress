@@ -1,0 +1,7 @@
+sentence-transformers
+dotenv
+numpy
+pytz
+tqdm
+requests
+torch

@@ -11,7 +11,13 @@ from utils.method import os_ap_sss_answer
 
 CONFIG = configparser.ConfigParser()
 PATH_CONFIG = os.getenv('path_2_config')
-CONFIG.read(PATH_CONFIG)
+
+ENVIRONMENT = os.getenv('environment')
+if ENVIRONMENT=="windows":
+    CONFIG.read(PATH_CONFIG, encoding='utf-8')
+else:
+    CONFIG.read(PATH_CONFIG)
+    
 DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
 
 
