@@ -10,6 +10,7 @@ import configparser
 import json
 import os
 
+from Ress.utils import EvoPrompt
 from utils.ReSS import ReSS
 from utils.call_model.embedding import Encoder
 # from utils.prompt import get_prompt
