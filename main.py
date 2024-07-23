@@ -10,7 +10,7 @@ import configparser
 import json
 import os
 
-from Ress.utils import EvoPrompt
+from utils.EvoPrompt import EvoPrompt
 from utils.ReSS import ReSS
 from utils.call_model.embedding import Encoder
 # from utils.prompt import get_prompt
@@ -73,6 +73,8 @@ def main():
 
     # initialization
     path_data = CONFIG["datapath"]["Final_Quality"]
+    print(f"{path_data=}")
+    print(f"get_file_name(path_data)={get_file_name(path_data)}")
     path_prompt = CONFIG["datapath"]["init_os_prompt"]
     type_llm = "Breeze"
     # type_embedding = "multi-qa-mpnet-base-dot-v1"
@@ -83,7 +85,8 @@ def main():
 
     # # 停止條件
     path_stop_file = os.path.join(os.getcwd(), 'stop_true.txt') # 人工 early stop 的檔案位置
-    ttl_pair_os_prompt_scores = ReSS(init_set, path_stop_file)
+    # ttl_pair_os_prompt_scores = ReSS(init_set, path_stop_file)
+    ttl_pair_os_prompt_scores = EvoPrompt(init_set)
     sorted_pire = sorted(ttl_pair_os_prompt_scores,  key=lambda x: x['score'],  reverse=True)
 
     # 儲存結果

@@ -97,8 +97,7 @@ def get_EvoPrompt_4_create_new_os_prompt(p_best, p_i, p_1, p_2):
         p_i: the prompt is going to evolute
     """
     prompt_4_create_new_os_prompt = \
-f"""
-Please follow the instruction step-by-step to generate a better prompt.
+f"""Please follow the instruction step-by-step to generate a better prompt.
 1. Identify the different parts between the Prompt 1 and Prompt 2:
 Prompt 1: Rewrite the input text into simpler text.
 Prompt 2: Rewrite my complex sentence in simpler terms, but keep the meaning.
@@ -140,8 +139,7 @@ Prompt 3: {p_best}
 4. Crossover the prompt in the step3 with the following basic prompt and generate a final prompt bracketed with <prompt> and </prompt>:
 Basic Prompt: {p_i}
 
-1. 
-"""
+1. """
     return prompt_4_create_new_os_prompt
 
 def get_prompt(type_task, *args):

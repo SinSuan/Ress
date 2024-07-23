@@ -77,10 +77,6 @@ def time_now():
 def get_file_name(path):
     """ get the corpus name only
     """
-    import os
-
-    # 完整文件路径
-    path = '/path/to/your/file/config.ini'
 
     # 获取文件名（带扩展名）
     file_name_with_extension = os.path.basename(path)
