@@ -20,7 +20,8 @@ if ENVIRONMENT=="windows":
 else:
     CONFIG.read(PATH_CONFIG)
     
-DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
+# DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
+DEBUGGER = "False"
 
 def normalized(v):
     len_squared = 0

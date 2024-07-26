@@ -15,7 +15,8 @@ if ENVIRONMENT=="windows":
 else:
     CONFIG.read(PATH_CONFIG)
     
-DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
+# DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
+DEBUGGER = "False"
 
 # extract the key information from the chunk
     # chunk: The chunk that needs to be summarized
