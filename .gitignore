@@ -1,6 +1,7 @@
 utils/api/
 dataset/
 record/
+init_prompt/
 config.ini
 .env
 test.*

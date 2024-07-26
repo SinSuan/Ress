@@ -45,9 +45,9 @@ def api_breeze(user_prompt, max_new_tokens=4096, temperature=None):
         else:
             r = j_result
     except Exception as e:
-        print(f"\texcept Exception = {e}")
-        print(e)
+        print(f"Except in api_breeze = {e}")
 
+        print(f"r = \n{r}")
     if DEBUGGER=="True":
         print("exit api_breeze")
     return r

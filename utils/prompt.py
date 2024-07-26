@@ -16,13 +16,21 @@ def get_prompt_4_summarize_chunk(chunk, os_prompt, input_question):
             The question that needs to be answered
     """
 
+#     prompt_4_summarize_chunk = \
+# f"""Article excerpt:
+# {chunk}
+
+# The above is the article excerpt related to my question.
+# Below is the question I want to ask.
+# Please select the text content that can answer this question.
+# {os_prompt}
+
+# Question:
+# {input_question}"""
     prompt_4_summarize_chunk = \
 f"""Article excerpt:
 {chunk}
 
-The above is the article excerpt related to my question.
-Below is the question I want to ask.
-Please select the text content that can answer this question.
 {os_prompt}
 
 Question:
@@ -88,7 +96,7 @@ DON'T return the [Scores] or explanation.
 Your new_prompt:__"""
     return prompt_4_create_new_os_prompt
 
-def get_EvoPrompt_4_create_new_os_prompt(p_best, p_i, p_1, p_2):
+def get_EvoDE_Prompt_4_create_new_os_prompt(p_best, p_i, p_1, p_2):
     """
     Var
         p_best: the prompt is with the highest score
@@ -142,6 +150,26 @@ Basic Prompt: {p_i}
 1. """
     return prompt_4_create_new_os_prompt
 
+def get_EvoGA_Prompt_4_create_new_os_prompt(p_1, p_2):
+    prompt_4_create_new_os_prompt = \
+f"""Please follow the instruction step-by-step to generate a better prompt.
+1. Crossover the following prompts and generate a new prompt:
+Prompt 1: Rewrite the input text into simpler text.
+Prompt 2: Rewrite my complex sentence in simpler terms, but keep the meaning.
+2. Mutate the prompt generated in Step 1 and generate a final prompt bracketed with <prompt> and </prompt>.
+
+1. Crossover Prompt: Simplify the complex text while maintaining its meaning.
+2. <prompt>Simplify the complex text while maintaining its meaning.</prompt>
+
+Please follow the instruction step-by-step to generate a better prompt.
+1. Crossover the following prompts and generate a new prompt:
+Prompt 1: {p_1}
+Prompt 2: {p_2}
+2. Mutate the prompt generated in Step 1 and generate a final prompt bracketed with <prompt> and </prompt>.
+
+1. """
+    return prompt_4_create_new_os_prompt
+
 def get_prompt(type_task, *args):
     """
     Var
@@ -160,8 +188,10 @@ def get_prompt(type_task, *args):
         user_prompt = get_prompt_4_exam_multichoice(*args)
     elif type_task in [2, "new"]:
         user_prompt = get_prompt_4_create_new_os_prompt(*args)
-    elif type_task in [3, "new_EvoPrompt"]:
-        user_prompt = get_EvoPrompt_4_create_new_os_prompt(*args)
+    elif type_task in [3, "new_EvoDE"]:
+        user_prompt = get_EvoDE_Prompt_4_create_new_os_prompt(*args)
+    elif type_task in [4, "new_EvoGA"]:
+        user_prompt = get_EvoGA_Prompt_4_create_new_os_prompt(*args)
     else:
         raise ValueError(f"Invalid type_task: {type_task}")
 
