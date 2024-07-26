@@ -27,7 +27,7 @@ def ReSS(ttl_model, ttl_dataset, sorted_pair):
     """
     if DEBUGGER=="True": print("enter ReSS")
     
-    example_num=2
+    example_num=5
     llm, _ = ttl_model
     train_split = ttl_dataset["train_split"]
     dev_split = ttl_dataset["dev_split"]
