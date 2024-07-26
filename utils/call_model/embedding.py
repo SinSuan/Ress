@@ -28,8 +28,7 @@ URL_BGEM3 = CONFIG["embedding"]["bgem3"]
 def api_bgem3(text):
     """ call bge-m3 from lab
     """
-    if DEBUGGER=="True":
-        print("enter get_embedding")
+    # if DEBUGGER=="True": print("enter get_embedding")
 
     payload = json.dumps({
         "input": f"{text}",
@@ -45,8 +44,7 @@ def api_bgem3(text):
     response = json.loads(response.text)
     embedding = response['data'][0]['embedding']
 
-    if DEBUGGER=="True":
-        print("exit get_embedding")
+    # if DEBUGGER=="True": print("exit get_embedding")
     return embedding
 
 class Bgem3:

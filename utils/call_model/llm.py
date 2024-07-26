@@ -19,8 +19,7 @@ URL = CONFIG["breeze"]["lab"]
 SUGGEST_SYSTEM_PROMPT = CONFIG["breeze"]["SUGGEST_SYSTEM_PROMPT"]
 
 def api_breeze(user_prompt, max_new_tokens=4096, temperature=None):
-    if DEBUGGER=="True":
-        print("enter api_breeze")
+    if DEBUGGER=="True": print("enter api_breeze")
 
     payload_input=f"<s> {SUGGEST_SYSTEM_PROMPT} [INST] {user_prompt} [/INST]"
     parameter = {
@@ -39,7 +38,9 @@ def api_breeze(user_prompt, max_new_tokens=4096, temperature=None):
     }
     try:
         response = requests.request("POST", URL, headers=headers, data=payload, timeout=120)
+        print(f"{response=}")
         j_result=json.loads(response.text)
+        print(f"{j_result=}")
         if "generated_text" in j_result.keys():
             r = j_result['generated_text']
         else:
@@ -48,32 +49,15 @@ def api_breeze(user_prompt, max_new_tokens=4096, temperature=None):
         print(f"Except in api_breeze = {e}")
 
         print(f"r = \n{r}")
-    if DEBUGGER=="True":
-        print("exit api_breeze")
+    if DEBUGGER=="True": print("exit api_breeze")
     return r
 
-def get_api(model_name):
-    if DEBUGGER=="True":
-        print("enter get_api")
-
-    if model_name=="Breeze":
-        get_llm_reply=api_breeze
-    # elif model_name=="Taide":
-    #     from api.Taide3_API import get_taide3
-    #     get_llm_reply=get_taide3
-    # elif model_name=="ChatGPT":
-    #     from api.ChatGPT_API import get_reply_16k
-    #     get_llm_reply=get_reply_16k
-    # elif model_name=="Llama3":
-    #     from api.Llama3_API import get_llama3
-    #     get_llm_reply=get_llama3
-    # elif model_name=="Mistral":
-    #     from api.Mistral2_API import get_mistral
-    #     get_llm_reply=get_mistral
-    else:
-        print("未選擇模型!")
-    print(f"目前使用模型為:{model_name}")
-
-    if DEBUGGER=="True":
-        print("exit get_api")
-    return get_llm_reply
+class LLM:
+    
+    def __init__(self, type_llm) -> None:
+        if type_llm=="Breeze":
+            self.model = api_breeze
+    
+    def reply(self, *args):
+        result = self.model(*args)
+        return result

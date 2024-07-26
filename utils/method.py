@@ -32,15 +32,15 @@ def os_ap_sss_answer(ttl_model, os_prompt, data, size_chunck = 3000, num_overlap
         num_overlap: int
             the number of senetences that overlap between two chunks
     """
-    if DEBUGGER=="True":
-        print("enter os_ap_sss_answer")
+    if DEBUGGER=="True": print("enter os_ap_sss_answer")
 
     content = data['content']   # 參考文章
     question = data['question'] # 問題(多選題)
-    get_llm_reply, embedding_model = ttl_model
+    llm, embedding_model = ttl_model
 
     # 切分摘要完要輸入給llm的內容
     new_content = content
+
     while len(new_content.split(" "))>size_chunck:
 
         ttl_chunck = get_ttl_chunk(new_content, size_chunck, num_overlap, embedding_model)
@@ -49,8 +49,8 @@ def os_ap_sss_answer(ttl_model, os_prompt, data, size_chunck = 3000, num_overlap
         for chunk in ttl_chunck:
 
             # 請llm幫我們把重要資訊留下
-            prompt_4_summarize_chunk =  get_prompt(0, chunk, os_prompt, question)
-            chunk_summary = get_llm_reply(prompt_4_summarize_chunk)
+            prompt_4_summarize_chunk =  get_prompt.sum("old", chunk, os_prompt, question)
+            chunk_summary = llm.reply(prompt_4_summarize_chunk)
             # if chunk_summary==None:
             #     continue
             new_content+= chunk_summary+" "
@@ -61,9 +61,8 @@ def os_ap_sss_answer(ttl_model, os_prompt, data, size_chunck = 3000, num_overlap
             break
 
     # 找完有用的內容後，進行問答
-    prompt_4_exam_multichoice = get_prompt(1,  new_content,  question)
-    answer_from_llm = get_llm_reply(prompt_4_exam_multichoice)
+    prompt_4_exam_multichoice = get_prompt.exam(new_content,  question)
+    answer_from_llm = llm.reply(prompt_4_exam_multichoice)
 
-    if DEBUGGER=="True":
-        print("exit os_ap_sss_answer")
+    if DEBUGGER=="True": print("exit os_ap_sss_answer")
     return answer_from_llm

@@ -27,15 +27,13 @@ def count_words(sentences):
     Return
         int: the number of words in thees sentences
     """
-    if DEBUGGER=="True":
-        print("enter count_words")
+    # if DEBUGGER=="True": print("enter count_words")
 
     count = 0
     for sentence in sentences:
         count += len(sentence.split(" "))
 
-    if DEBUGGER=="True":
-        print("exit count_words")
+    # if DEBUGGER=="True": print("exit count_words")
     return count
 
 def prompt_in_list(ttl_pire_prompt_score, new_prompt):
@@ -47,8 +45,7 @@ def prompt_in_list(ttl_pire_prompt_score, new_prompt):
         new_prompt: str
             the prompt to be check whether or not the in ttl_prompt
     """
-    if DEBUGGER=="True":
-        print("enter prompt_in_list")
+    if DEBUGGER=="True": print("enter prompt_in_list")
 
     # 預設不在
     in_list = False
@@ -58,11 +55,11 @@ def prompt_in_list(ttl_pire_prompt_score, new_prompt):
             in_list = True
             break
 
-    if DEBUGGER=="True":
-        print("exit prompt_in_list")
+    if DEBUGGER=="True": print("exit prompt_in_list")
     return in_list
 
 def time_now():
+    if DEBUGGER=="True": print("enter time_now")
 
     # Define the timezone for Taiwan
     taiwan_tz = pytz.timezone('Asia/Taipei')
@@ -72,11 +69,13 @@ def time_now():
 
     time_formated = taiwan_time.strftime('%Y_%m%d_%H%M')
 
+    if DEBUGGER=="True": print("exit time_now")
     return time_formated
 
 def get_file_name(path):
     """ get the corpus name only
     """
+    if DEBUGGER=="True": print("enter get_file_name")
 
     # 获取文件名（带扩展名）
     file_name_with_extension = os.path.basename(path)
@@ -84,4 +83,5 @@ def get_file_name(path):
     # 获取文件名（不带扩展名）
     file_name, _ = os.path.splitext(file_name_with_extension)
 
+    if DEBUGGER=="True": print("exit get_file_name")
     return file_name

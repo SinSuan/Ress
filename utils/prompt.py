@@ -1,75 +1,72 @@
 """
-prompt 太常了，另外寫成 function
-不存成 json 是因為仍要便於閱讀與編輯
+偽 json 檔
 """
 
-def get_prompt_4_summarize_chunk(chunk, os_prompt, input_question):
-    """ extract the key information from the chunk
-    Var
-        chunk: str
-            The chunk that needs to be summarized
-            
-        os_prompt: str
-            The prompt to enhance the model's performance
-            
-        input_question: str
-            The question that needs to be answered
-    """
+import re
+import configparser
+import os
 
-#     prompt_4_summarize_chunk = \
-# f"""Article excerpt:
-# {chunk}
+CONFIG = configparser.ConfigParser()
+PATH_CONFIG = os.getenv('path_2_config')
 
-# The above is the article excerpt related to my question.
-# Below is the question I want to ask.
-# Please select the text content that can answer this question.
-# {os_prompt}
+ENVIRONMENT = os.getenv('environment')
+if ENVIRONMENT=="windows":
+    CONFIG.read(PATH_CONFIG, encoding='utf-8')
+else:
+    CONFIG.read(PATH_CONFIG)
+    
+DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
 
-# Question:
-# {input_question}"""
-    prompt_4_summarize_chunk = \
-f"""Article excerpt:
+# extract the key information from the chunk
+    # chunk: The chunk that needs to be summarized
+    # os_prompt: The prompt to enhance the model's performance
+    # question_and_options: The question that needs to be answered
+PROMPT_4_SUMMARIZE_CHUNK = {
+    "old":[
+"""Article excerpt:
 {chunk}
 
 {os_prompt}
 
 Question:
-{input_question}"""
-    return prompt_4_summarize_chunk
+{question_and_options}"""
+    ],
+    "new":[
+"""Article excerpt:
+{chunk}
 
-def get_prompt_4_exam_multichoice(new_content, input_question):
-    """
-    Var
-        new_content: str
-            summarized chuncks of the corresponding content
-            
-        input_question: str
-            The question that needs to be answered
-    """
+The above is the article excerpt related to my question.
+Below is the question I want to ask.
+Please select the text content that can answer this question.
+{os_prompt}
 
-    prompt_4_exam_multichoice = \
-f"""There will be an article question and four options. 
+Question:
+{question_and_options}"""
+    ]
+}
+
+# answer multichoice
+    # content: summarized chuncks of the corresponding content
+    # input_question: The question that needs to be answered
+PROMPT_4_EXAM_MULTICHOICE = \
+"""There will be an article question and four options. 
 Please choose the option that answers the question based on the article.
 
 article:
-{new_content}
+{content}
 
 question:
 {input_question}
 
 Your answer must be the number of one of the options,meaning it should be either option1, option2, option3, or option4. 
 The format for the answer should be as follows: Answer__optionX."""
-    return prompt_4_exam_multichoice
 
-def get_prompt_4_create_new_os_prompt(example):
-    """
-    Var
-        example: str
-            form: "[Old prompt]:"{p['prompt']}"\n[Scores]:{p['score']}"
-    """
-    
-    prompt_4_create_new_os_prompt = \
-f"""You are an expert at crafting prompts.
+# create new os prompt by ReSS
+PROMPT_4_CREATE_NEW_OS_PROMPT = {
+
+    # example: form: "[Old prompt]:"{p['prompt']}"\n[Scores]:{p['score']}"
+    "ReSS":[
+"""You are an expert at crafting prompts.
 Based on the example task given below for an LLM, fill in the most suitable prompt in the place marked [new_prompt].
 The following describes the task you will undertake:
 
@@ -94,18 +91,13 @@ Please help me think of a unique new_prompt where higher scores are better.
 ### You only need to return the new_prompt ###
 DON'T return the [Scores] or explanation.
 Your new_prompt:__"""
-    return prompt_4_create_new_os_prompt
+    ],
 
-def get_EvoDE_Prompt_4_create_new_os_prompt(p_best, p_i, p_1, p_2):
-    """
-    Var
-        p_best: the prompt is with the highest score
-        p_1: the parent prompt 1 is mutated 
-        p_2: the parent prompt 2 is mutated
-        p_i: the prompt is going to evolute
-    """
-    prompt_4_create_new_os_prompt = \
-f"""Please follow the instruction step-by-step to generate a better prompt.
+    # p_best: the prompt is with the highest score
+    # p_1, p_2: the random selected parent prompts to be mutated
+    # p_i: the prompt to crossover
+    "EvoDE":[
+"""Please follow the instruction step-by-step to generate a better prompt.
 1. Identify the different parts between the Prompt 1 and Prompt 2:
 Prompt 1: Rewrite the input text into simpler text.
 Prompt 2: Rewrite my complex sentence in simpler terms, but keep the meaning.
@@ -148,11 +140,11 @@ Prompt 3: {p_best}
 Basic Prompt: {p_i}
 
 1. """
-    return prompt_4_create_new_os_prompt
+    ],
 
-def get_EvoGA_Prompt_4_create_new_os_prompt(p_1, p_2):
-    prompt_4_create_new_os_prompt = \
-f"""Please follow the instruction step-by-step to generate a better prompt.
+    # p_1, p_2: the random selected parent prompts to crossover
+    "EvoGA":[
+"""Please follow the instruction step-by-step to generate a better prompt.
 1. Crossover the following prompts and generate a new prompt:
 Prompt 1: Rewrite the input text into simpler text.
 Prompt 2: Rewrite my complex sentence in simpler terms, but keep the meaning.
@@ -168,31 +160,83 @@ Prompt 2: {p_2}
 2. Mutate the prompt generated in Step 1 and generate a final prompt bracketed with <prompt> and </prompt>.
 
 1. """
-    return prompt_4_create_new_os_prompt
+    ]
 
-def get_prompt(type_task, *args):
+}
+
+class GetPrompt:
+    """ 各函式的明確用途可以從其使用的 global variable 得知
     """
-    Var
-        type_task: str
-            The type of task that the prompt is for.
-            0: summarize_chunk
-            1: exam_multichoice
-            2: create_new_os_prompt
+    
+    def __init__(self) -> None:
+        pass
+    
+    def get_final_prompt(self, template, *args):
+        if DEBUGGER=="True": print("enter GetPrompt.get_final_prompt")
         
-        *args: tuple
-            The arguments that are needed to generate the prompt.
-    """
-    if type_task in [0, "sum"]:
-        user_prompt = get_prompt_4_summarize_chunk(*args)
-    elif type_task in [1, "exam"]:
-        user_prompt = get_prompt_4_exam_multichoice(*args)
-    elif type_task in [2, "new"]:
-        user_prompt = get_prompt_4_create_new_os_prompt(*args)
-    elif type_task in [3, "new_EvoDE"]:
-        user_prompt = get_EvoDE_Prompt_4_create_new_os_prompt(*args)
-    elif type_task in [4, "new_EvoGA"]:
-        user_prompt = get_EvoGA_Prompt_4_create_new_os_prompt(*args)
-    else:
-        raise ValueError(f"Invalid type_task: {type_task}")
+        keys = re.findall('{(.*?)}', template)  # 抓出 key
+        kwargs = dict(zip(keys, args))  # 製作字典
+        final_prompt = template.format(**kwargs)   # 代換 prompt 中的變數
+        
+        if DEBUGGER=="True": print("exit GetPrompt.get_final_prompt")
+        return final_prompt
+    
+    def sum(self, type_os_prompt, *args):
+        """ extract the key information from the chunk
+        Var
+            type_os_prompt:
+                "old" or "new"
+                
+            args
+                chunk:
+                    The chunk that needs to be summarized
+                os_prompt:
+                    The prompt to enhance the model's performance
+                question_and_options:
+                    The question that needs to be answered
+        """
+        if DEBUGGER=="True": print("enter GetPrompt.sum")
+        
+        template = PROMPT_4_SUMMARIZE_CHUNK[type_os_prompt][0]
+        final_prompt = self.get_final_prompt(template, *args)
+        
+        if DEBUGGER=="True": print("exit GetPrompt.sum")
+        return final_prompt
+    
+    def exam(self, *args):
+        """ answer multichoice
+        Var
+            args    
+                content:
+                    summarized chuncks of the corresponding content
+                input_question:
+                    The question that needs to be answered
+        """
+        if DEBUGGER=="True": print("enter GetPrompt.exam")
+        
+        template = PROMPT_4_EXAM_MULTICHOICE
+        final_prompt = self.get_final_prompt(template, *args)
+        
+        if DEBUGGER=="True": print("exit GetPrompt.exam")
+        return final_prompt
+    
+    def create(self, type_update, *args):
+        """ create new os prompt
+        Var
+            type_update:
+                "ReSS" or "EvoDE" or "EvoGA"
+        
+            args
+                "ReSS"      example
+                "EvoDE"     p_best, p_i, p_1, p_2
+                "EvoGA"     p_1, p_2
+        """
+        if DEBUGGER=="True": print("enter GetPrompt.create")
+        
+        template = PROMPT_4_CREATE_NEW_OS_PROMPT[type_update][0]
+        final_prompt = self.get_final_prompt(template, *args)
+        
+        if DEBUGGER=="True": print("exit GetPrompt.create")
+        return final_prompt
 
-    return user_prompt
+get_prompt = GetPrompt()
