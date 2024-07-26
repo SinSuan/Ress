@@ -26,11 +26,11 @@ def get_new_prompt(llm, prompt_4_create_new_os_prompt):
     if DEBUGGER=="True": print("enter get_new_prompt")
     
     # 正則表達抓<prompt></prompt>間的字
-    reply = llm.reply(prompt_4_create_new_os_prompt, 8192, 0.5) # EvoPrompt 論文的溫度設 0.5
+    reply = llm.reply(prompt_4_create_new_os_prompt, 0.5) # EvoPrompt 論文的溫度設 0.5
     # print(f"{reply=}\n")
     match_all = re.findall(r'<\s*prompt\s*>(.*?)<\s*/\s*prompt\s*>', reply, re.DOTALL)
     while(match_all == []):
-        reply = llm.reply(prompt_4_create_new_os_prompt, 8192, 0.5) # EvoPrompt 論文的溫度設 0.5
+        reply = llm.reply(prompt_4_create_new_os_prompt, 0.5) # EvoPrompt 論文的溫度設 0.5
         # print(f"{reply=}\n")
         match_all = re.findall(r'<\s*prompt\s*>(.*?)<\s*/\s*prompt\s*>', reply, re.DOTALL)
     new_prompt = match_all[-1]
@@ -90,11 +90,11 @@ def EvoDE(ttl_model, ttl_dataset, sorted_pairs):
         # # print(f"{new_prompt=}")
         
         new_prompt = get_new_prompt(llm, prompt_4_create_new_os_prompt)
-        print(f"{new_prompt=}")
+        if DEBUGGER=="True": print(f"{new_prompt=}")
         
         # 紀錄
         train_score = get_score(ttl_model, new_prompt, train_split, 3000, 10)
-        print(f"{train_score=}\ni[\"train_score\"]={i['train_score']}")
+        if DEBUGGER=="True": print(f"{train_score=}\ni[\"train_score\"]={i['train_score']}")
         if train_score <= i["train_score"]:
             new_population.append(i)
         else:
@@ -110,7 +110,9 @@ def EvoDE(ttl_model, ttl_dataset, sorted_pairs):
     return new_population
 
 def get_weight(ttl_score):
-    ttl_weight = np.array(ttl_score)
+    ttl_weight = np.array(ttl_score, dtype=float)
+    if np.sum(ttl_weight!=0)<=1:
+        ttl_weight[ttl_weight==0]=0.01
     ttl_weight = ttl_weight/np.sum(ttl_weight)
     return ttl_weight
 

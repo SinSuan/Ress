@@ -1,5 +1,5 @@
 sentence-transformers
-dotenv
+python-dotenv
 numpy
 pytz
 tqdm

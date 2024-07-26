@@ -41,7 +41,7 @@ def ReSS(ttl_model, ttl_dataset, sorted_pair):
 
     # 製作 new_prompt
     prompt_4_create_new_os_prompt = get_prompt.create("ReSS",  example)
-    new_prompt = llm.reply(prompt_4_create_new_os_prompt, 4096, 1)
+    new_prompt = llm.reply(prompt_4_create_new_os_prompt, 1)
 
     # 紀錄
     if prompt_in_list(sorted_pair, new_prompt) is False:

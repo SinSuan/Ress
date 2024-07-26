@@ -9,7 +9,7 @@ from typing import List
 
 import requests
 import torch
-# from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer
 import numpy as np
 
 CONFIG = configparser.ConfigParser()
@@ -28,8 +28,8 @@ URL_BGEM3 = CONFIG["embedding"]["bgem3"]
 def api_bgem3(text):
     """ call bge-m3 from lab
     """
-    # if DEBUGGER=="True": print("enter get_embedding")
-
+    if DEBUGGER=="True": print("enter get_embedding")
+    if DEBUGGER=="True": print(f"bgem3_text = {text}")
     payload = json.dumps({
         "input": f"{text}",
         "model": "bge-m3",
@@ -41,10 +41,13 @@ def api_bgem3(text):
     }
 
     response = requests.request("POST", URL_BGEM3, headers=headers, data=payload, timeout=120)
+    if DEBUGGER=="True": print(f"{response=}")
+    if DEBUGGER=="True": print(f"{response.text=}")
     response = json.loads(response.text)
+    if DEBUGGER=="True": print(f"{response=}")
     embedding = response['data'][0]['embedding']
 
-    # if DEBUGGER=="True": print("exit get_embedding")
+    if DEBUGGER=="True": print("exit get_embedding")
     return embedding
 
 class Bgem3:
@@ -96,5 +99,7 @@ class Encoder:
     def encode(self, ttl_sentence: List[str])->List:
         """ encode a list of strings at once
         """
+        if DEBUGGER=="True": print("enter Encoder.encode")
         ttl_embedding = self.model.encode(ttl_sentence)
+        if DEBUGGER=="True": print("exit Encoder.encode")
         return ttl_embedding
