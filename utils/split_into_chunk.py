@@ -21,7 +21,7 @@ else:
     CONFIG.read(PATH_CONFIG)
     
 DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
-# DEBUGGER = "False"
+# DEBUGGER = "False"    # 可以單獨關掉這個檔案的 DEBUGGER
 
 def normalized(v):
     len_squared = 0

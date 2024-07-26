@@ -17,6 +17,7 @@ else:
     CONFIG.read(PATH_CONFIG)
     
 DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
+# DEBUGGER = "False"    # 可以單獨關掉這個檔案的 DEBUGGER
 
 def count_words(sentences):
     """
@@ -27,13 +28,13 @@ def count_words(sentences):
     Return
         int: the number of words in thees sentences
     """
-    # if DEBUGGER=="True": print("enter count_words")
+    if DEBUGGER=="True": print("enter count_words")
 
     count = 0
     for sentence in sentences:
         count += len(sentence.split(" "))
 
-    # if DEBUGGER=="True": print("exit count_words")
+    if DEBUGGER=="True": print("exit count_words")
     return count
 
 def prompt_in_list(ttl_pire_prompt_score, new_prompt):

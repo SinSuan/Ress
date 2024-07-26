@@ -78,9 +78,6 @@ def experiment(ttl_model, os_prompt, ttl_data, size_chunck, num_overlap):
             score += 1
         num += 1
 
-        if DEBUGGER=="True": print(f"{truth_answer_number=}\n{result=}")
-        # print出目前得分正確率
-        # print(f"score:{score}/{num} :({score/num*100}%)")
         my_result.append(result)
 
     if DEBUGGER=="True": print("exit experiment")

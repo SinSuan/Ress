@@ -40,15 +40,11 @@ def os_ap_sss_answer(ttl_model, os_prompt, data, size_chunck = 3000, num_overlap
 
     # 切分摘要完要輸入給llm的內容
     new_content = content
-
-    if DEBUGGER=="True": print("before while")
-    if DEBUGGER=="True": print(f"""len(new_content.split(" "))={len(new_content.split(" "))}\n{size_chunck=}""")
     while len(new_content.split(" "))>size_chunck:
         
         ttl_chunck = get_ttl_chunk(new_content, size_chunck, num_overlap, embedding_model)
         # 這一輪的新內容
         new_content = ""
-        if DEBUGGER=="True": print("\tbefore for-loop")
         for chunk in ttl_chunck:
 
             # 請llm幫我們把重要資訊留下
@@ -57,12 +53,11 @@ def os_ap_sss_answer(ttl_model, os_prompt, data, size_chunck = 3000, num_overlap
             # if chunk_summary==None:
             #     continue
             new_content+= chunk_summary+" "
-        if DEBUGGER=="True": print("\tafter for-loop")
+        
         # 防錯(如果LLM api無回傳 直接比照truncate)
         if new_content=="":
             new_content = " ".join(content.split(" ")[:3000])
             break
-    if DEBUGGER=="True": print("after while")
 
     # 找完有用的內容後，進行問答
     prompt_4_exam_multichoice = get_prompt.exam(new_content,  question)
