@@ -53,13 +53,13 @@ def init_setting(type_llm: str, type_embedding: str, path_data: str, path_prompt
     ttl_model = (llm, embedding_model)
 
     # 指定訓練資料
-    num_training_data = 37
+    num_training_data = 180
     with open(path_data,  'r', encoding='utf-8') as file:
         data = json.load(file)
     # training_data=data[-num_training_data:]
     dataset = random.sample(data, num_training_data)
-    train_split = dataset[:30]
-    dev_split = dataset[30:]
+    train_split = dataset[:150]
+    dev_split = dataset[150:]
     ttl_dataset = {
         "train_split": train_split,
         "dev_split": dev_split,
