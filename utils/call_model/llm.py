@@ -74,8 +74,10 @@ def api_breeze(user_prompt, temperature=None, max_new_tokens=1000):
     }
     try:
         # response = requests.request("POST", URL, headers=headers, data=payload, timeout=120)
-        URL = "https://nlplab-llm.nlpnchu.org/generate_stream"
+        # URL = "https://nlplab-llm.nlpnchu.org/generate_stream"
         response = requests.request("POST", URL, headers=headers, data=payload, stream=True)
+        # print(f"{response=}")
+        # print(f"{response.text=}")
         j_result=json.loads(response.text)
         if "generated_text" in j_result.keys():
             r = j_result['generated_text']
@@ -83,7 +85,7 @@ def api_breeze(user_prompt, temperature=None, max_new_tokens=1000):
             r = j_result
     except Exception as e:
         print(f"{user_prompt=}")
-        print(f"Except in api_breeze = ")
+        print(f"Except in api_breeze =\n{e}")
         raise(e)
     
     
