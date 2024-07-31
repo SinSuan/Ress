@@ -32,9 +32,9 @@ def count_token(user_prompt):
     try:
         URL_TOKENIZER = 'https://nlplab-llm.nlpnchu.org/tokenize'
         response = requests.post(URL_TOKENIZER, headers=headers, data=json.dumps(data))
-        print(f"{response=}")
+        # print(f"{response=}")
         response_data = response.json()
-        print(f"{response_data=}")
+        # print(f"{response_data=}")
         num_token = len(response_data)
     except:
         num_token = None
