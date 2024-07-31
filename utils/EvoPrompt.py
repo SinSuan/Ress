@@ -22,7 +22,7 @@ else:
 
 DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
 
-def get_new_prompt(llm, prompt_4_create_new_os_prompt, temperature):
+def get_new_prompt(llm, prompt_4_create_new_os_prompt, temperature=0.5):
     """ call model 並 用正則表達抓<prompt></prompt>間的字
     Var
         temperature:
