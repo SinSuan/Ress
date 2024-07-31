@@ -74,7 +74,6 @@ def api_breeze(user_prompt, temperature=None, max_new_tokens=1000):
     }
     try:
         # response = requests.request("POST", URL, headers=headers, data=payload, timeout=120)
-        # URL = "https://nlplab-llm.nlpnchu.org/generate_stream"
         response = requests.request("POST", URL, headers=headers, data=payload, stream=True)
         # print(f"{response=}")
         # print(f"{response.text=}")
