@@ -39,7 +39,49 @@ def get_new_prompt(llm, prompt_4_create_new_os_prompt, temperature=0.5):
     
     if DEBUGGER=="True": print("exit get_new_prompt")
     return new_prompt, reply
+
+def get_distinct_new_propmt(llm, population, prompt_4_create_new_os_prompt, temperature=0.5, **kwargs):
+    """ 用來確保 new_prompt 不在 population 裡
+    Var
+        temperature:
+            EvoPrompt 論文的溫度設 0.5
+        
+        kwargs:
+            用來 debug 的參數
+
+    """
+    if DEBUGGER=="True": print("enter get_distinct_new_propmt")
+
+    # 嘗試生出新的 prompt
+    num_inc_temp = int((1-temperature)//0.1)    # 生不出新的 prompt 就提高溫度
+    num_pop = len(population)   # 溫度設最高之後給 pop 裡的每個參數各一次機會
+    num_try = num_inc_temp + num_pop + 1    # temperature 升到 1.0 都有重複，pop 裡的每個 prompt 都生過一次，最後再試一次（類似鴿籠原理）
+
+    t = population[0]['prompt']
+
+    temperature = 0.5
+    new_prompt, reply = get_new_prompt(llm, prompt_4_create_new_os_prompt, temperature)
+    for _ in range(num_try):
+        if prompt_in_list(population, new_prompt) is False:
+            break
+        temperature = min(1, temperature + 0.1) # prompt 重複的話就增加變化度
+        # new_prompt, reply = get_new_prompt(llm, prompt_4_create_new_os_prompt, temperature)
+        new_prompt, reply = t, "debug"
     
+    # 如果經過 num_try 次還是重複，就 raise error
+    if prompt_in_list(population, new_prompt) is True:
+        print(f"{population=}")
+
+        for k, v in kwargs.items():
+            print(f"{k} = {v}")
+
+        print(f"{new_prompt=}")
+        print(f"{reply=}")
+        print(f"{prompt_4_create_new_os_prompt=}")
+        raise ValueError(f"想不到新的 prompt 了")
+        
+    if DEBUGGER=="True": print("exit get_distinct_new_propmt")
+    return new_prompt
 
 def EvoDE(ttl_model, ttl_dataset, sorted_pairs):
     """ 總共抽四筆 prompt: p_best, p_i, p_1, p_2
@@ -71,24 +113,25 @@ def EvoDE(ttl_model, ttl_dataset, sorted_pairs):
         p_2 = p_2["prompt"]
 
         prompt_4_create_new_os_prompt = get_prompt.create("EvoDE", p_best, p_i, p_1, p_2)
+        new_prompt = get_distinct_new_propmt(llm, new_population, prompt_4_create_new_os_prompt)
 
-        temperature = 0.5
-        new_prompt, reply = get_new_prompt(llm, prompt_4_create_new_os_prompt, temperature)
-        for _ in range(9):  # 5 (0.5~0.9) + 3 (1.0) + 1 = 9
-            if prompt_in_list(new_population, new_prompt) is False:
-                break
-            temperature = min(1, temperature + 0.1) # prompt 重複的話就增加變化度
-            new_prompt, reply = get_new_prompt(llm, prompt_4_create_new_os_prompt, temperature)
-        if prompt_in_list(new_population, new_prompt) is True:
-            print(f"{new_population=}")
-            print(f"{p_best=}")
-            print(f"{p_i=}")
-            print(f"{p_1=}")
-            print(f"{p_2=}")
-            print(f"{new_prompt=}")
-            print(f"{reply=}")
-            print(f"{prompt_4_create_new_os_prompt=}")
-            raise ValueError(f"想不到新的 prompt 了")
+        # temperature = 0.5
+        # new_prompt, reply = get_new_prompt(llm, prompt_4_create_new_os_prompt, temperature)
+        # for _ in range(9):  # 5 (0.5~0.9) + 3 (1.0) + 1 = 9
+        #     if prompt_in_list(new_population, new_prompt) is False:
+        #         break
+        #     temperature = min(1, temperature + 0.1) # prompt 重複的話就增加變化度
+        #     new_prompt, reply = get_new_prompt(llm, prompt_4_create_new_os_prompt, temperature)
+        # if prompt_in_list(new_population, new_prompt) is True:
+        #     print(f"{new_population=}")
+        #     print(f"{p_best=}")
+        #     print(f"{p_i=}")
+        #     print(f"{p_1=}")
+        #     print(f"{p_2=}")
+        #     print(f"{new_prompt=}")
+        #     print(f"{reply=}")
+        #     print(f"{prompt_4_create_new_os_prompt=}")
+        #     raise ValueError(f"想不到新的 prompt 了")
             
         # 紀錄
         train_score = get_score(ttl_model, new_prompt, train_split, 3000, 10)
@@ -136,8 +179,11 @@ def EvoGA(ttl_model, ttl_dataset, sorted_pairs):
         p_1, p_2 = np.random.choice(ttl_prompt, size=2, replace=False, p=ttl_weight)
 
         prompt_4_create_new_os_prompt = get_prompt.create("EvoGA", p_1, p_2)
-        new_prompt = get_new_prompt(llm, prompt_4_create_new_os_prompt)
+        # new_prompt, reply = get_new_prompt(llm, prompt_4_create_new_os_prompt)
         
+        new_prompt = get_distinct_new_propmt(llm, new_population, prompt_4_create_new_os_prompt)
+
+
         # 紀錄
         train_score = get_score(ttl_model, new_prompt, train_split, 3000, 10)
         dev_score = get_score(ttl_model, new_prompt, dev_split, 3000, 10)
