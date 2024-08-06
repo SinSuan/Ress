@@ -188,7 +188,8 @@ Prompt 2: {p_2}
 2. Randomly mutate the different parts
 3. Combine the different parts with Prompt 3, selectively replace it with the different parts in step2 and generate a new prompt.
 Prompt 3: {p_best}
-4. Crossover the prompt in the step3 with the following basic prompt and generate a final prompt bracketed with <prompt> and </prompt>:
+4. Crossover the prompt in the step3 and the worst prompt with the following basic prompt and generate a final prompt bracketed with <prompt> and </prompt>:
+Worst prompt: {p_contr}
 Basic Prompt: {p_i}
 
 1. """

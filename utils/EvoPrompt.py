@@ -57,7 +57,7 @@ def get_distinct_new_propmt(llm, population, prompt_4_create_new_os_prompt, temp
     num_pop = len(population)   # 溫度設最高之後給 pop 裡的每個參數各一次機會
     num_try = num_inc_temp + num_pop + 1    # temperature 升到 1.0 都有重複，pop 裡的每個 prompt 都生過一次，最後再試一次（類似鴿籠原理）
 
-    t = population[0]['prompt']
+    # t = population[0]['prompt']
 
     temperature = 0.5
     new_prompt, reply = get_new_prompt(llm, prompt_4_create_new_os_prompt, temperature)
@@ -65,8 +65,8 @@ def get_distinct_new_propmt(llm, population, prompt_4_create_new_os_prompt, temp
         if prompt_in_list(population, new_prompt) is False:
             break
         temperature = min(1, temperature + 0.1) # prompt 重複的話就增加變化度
-        # new_prompt, reply = get_new_prompt(llm, prompt_4_create_new_os_prompt, temperature)
-        new_prompt, reply = t, "debug"
+        new_prompt, reply = get_new_prompt(llm, prompt_4_create_new_os_prompt, temperature)
+        # new_prompt, reply = t, "debug"
     
     # 如果經過 num_try 次還是重複，就 raise error
     if prompt_in_list(population, new_prompt) is True:
@@ -96,11 +96,22 @@ def EvoDE(ttl_model, ttl_dataset, sorted_pairs):
 
     p_best = sorted_pairs[0]['prompt']
 
+    # 回歸初始狀態，看 record 的時候才能一眼看出哪個 iteration 變了
+    old_population = [
+        {
+            "prompt": pair['prompt'],
+            "train_score": pair['train_score'],
+            "dev_score": pair['dev_score'],
+        } for pair in sorted_pairs
+    ]
+    rest_sorted_pair = sorted_pairs[:]
+    size_population = len(sorted_pairs)
     # 沒扣 best
     new_population = []
-    rest_sorted_pair = sorted_pairs[:]
-    for i in rest_sorted_pair:
-        p_i = i['prompt']
+    for i in range(size_population):
+    # for i in rest_sorted_pair:
+        p_i = rest_sorted_pair[i]['prompt']
+        # p_i = i['prompt']
 
         remaining_pairs = [pair for pair in rest_sorted_pair if pair['prompt'] != p_i]
         try:
@@ -113,7 +124,7 @@ def EvoDE(ttl_model, ttl_dataset, sorted_pairs):
         p_2 = p_2["prompt"]
 
         prompt_4_create_new_os_prompt = get_prompt.create("EvoDE", p_best, p_i, p_1, p_2)
-        new_prompt = get_distinct_new_propmt(llm, new_population, prompt_4_create_new_os_prompt)
+        new_prompt = get_distinct_new_propmt(llm, old_population, prompt_4_create_new_os_prompt)
 
         # temperature = 0.5
         # new_prompt, reply = get_new_prompt(llm, prompt_4_create_new_os_prompt, temperature)
@@ -135,14 +146,14 @@ def EvoDE(ttl_model, ttl_dataset, sorted_pairs):
             
         # 紀錄
         train_score = get_score(ttl_model, new_prompt, train_split, 3000, 10)
-        if train_score <= i["train_score"]:
-            new_population.append(i)
+        if train_score <= rest_sorted_pair[i]["train_score"]:
+            new_population.append(old_population[i])
         else:
             dev_score = get_score(ttl_model, new_prompt, dev_split, 3000, 10)
             new_population.append({
                 "prompt": new_prompt,
                 "train_score": train_score,
-                'dev_score': dev_score,
+                "dev_score": dev_score,
                 "basic_prompt": p_i,
                 "parent": [p_1, p_2]
             })
@@ -171,7 +182,15 @@ def EvoGA(ttl_model, ttl_dataset, sorted_pairs):
 
     size_population = len(sorted_pairs)
 
-    new_population = sorted_pairs[:]
+    # 回歸初始狀態，看 record 的時候才能一眼看出哪個 iteration 變了
+    old_population = [
+        {
+            "prompt": pair['prompt'],
+            "train_score": pair['train_score'],
+            "dev_score": pair['dev_score'],
+        } for pair in sorted_pairs
+    ]
+    new_population = []
     for i in range(size_population):
         ttl_prompt = [pair['prompt'] for pair in sorted_pairs]
         ttl_score = [pair['train_score'] for pair in sorted_pairs]
@@ -181,7 +200,7 @@ def EvoGA(ttl_model, ttl_dataset, sorted_pairs):
         prompt_4_create_new_os_prompt = get_prompt.create("EvoGA", p_1, p_2)
         # new_prompt, reply = get_new_prompt(llm, prompt_4_create_new_os_prompt)
         
-        new_prompt = get_distinct_new_propmt(llm, new_population, prompt_4_create_new_os_prompt)
+        new_prompt = get_distinct_new_propmt(llm, old_population, prompt_4_create_new_os_prompt)
 
 
         # 紀錄
@@ -190,11 +209,12 @@ def EvoGA(ttl_model, ttl_dataset, sorted_pairs):
         prompt_score = {
             'prompt': new_prompt,
             'train_score': train_score,
-            'dev_score': dev_score
+            'dev_score': dev_score,
+            "parent": [p_1, p_2]
         }
         new_population.append(prompt_score)
-        
-    new_population = sorted(new_population,  key=lambda x: x['train_score'],  reverse=True)
+
+    new_population = sorted(old_population+new_population,  key=lambda x: x['train_score'],  reverse=True)
     new_population = new_population[:size_population]
     
     if DEBUGGER=="True": print("exit EvoGA")
