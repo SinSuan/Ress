@@ -23,7 +23,8 @@ else:
     
 DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
 
-URL_BGEM3 = CONFIG["embedding"]["bgem3"]
+# URL_BGEM3 = CONFIG["embedding"]["bgem3"]
+HOST = CONFIG["embedding"]["bgem3"]
 
 def api_bgem3(text):
     """ call bge-m3 from lab
@@ -40,7 +41,7 @@ def api_bgem3(text):
         'Content-Type': 'application/json'
     }
 
-    response = requests.request("POST", URL_BGEM3, headers=headers, data=payload, timeout=120)
+    response = requests.request("POST", f"{HOST}/v1/embeddings", headers=headers, data=payload, timeout=120)
     response = json.loads(response.text)
     embedding = response['data'][0]['embedding']
 

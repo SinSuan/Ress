@@ -15,7 +15,8 @@ else:
 CONFIG.read(PATH_CONFIG, encoding='utf-8')
 DEBUGGER = CONFIG["DEBUGGER"]["DEBUGGER"]
 
-URL = CONFIG["breeze"]["lab"]
+HOST = CONFIG["breeze"]["lab"]
+# URL = CONFIG["breeze"]["lab"]
 SUGGEST_SYSTEM_PROMPT = CONFIG["breeze"]["SUGGEST_SYSTEM_PROMPT"]
 
 def count_token(user_prompt):
@@ -30,8 +31,7 @@ def count_token(user_prompt):
         }
     }
     try:
-        URL_TOKENIZER = 'https://nlplab-llm.nlpnchu.org/tokenize'
-        response = requests.post(URL_TOKENIZER, headers=headers, data=json.dumps(data))
+        response = requests.post(f"{HOST}/tokenize", headers=headers, data=json.dumps(data))
         # print(f"{response=}")
         response_data = response.json()
         # print(f"{response_data=}")
@@ -74,7 +74,7 @@ def api_breeze(user_prompt, temperature=None, max_new_tokens=1000):
     }
     try:
         # response = requests.request("POST", URL, headers=headers, data=payload, timeout=120)
-        response = requests.request("POST", URL, headers=headers, data=payload, stream=True)
+        response = requests.request("POST", f"{HOST}/generate", headers=headers, data=payload, stream=True)
         # print(f"{response=}")
         # print(f"{response.text=}")
         j_result=json.loads(response.text)
